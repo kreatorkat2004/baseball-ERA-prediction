@@ -1,0 +1,381 @@
+---
+title: "STAT 410 Pitching"
+author: "Aaron Wu, Ruchi Tiwari, Edwin Munoz, Shakty Juarez"
+date: "2024-11-22"
+output: 
+  pdf_document:
+    latex_engine: xelatex  
+---
+
+Problem Statement:
+The primary objective of this project is to develop a predictive regression model that accurately forecasts a baseball pitcher's Earned Run Average (ERA) based on various performance metrics. With a dataset encompassing one hundred and six potential predictors, the challenge lies in identifying the most significant regressors that contribute meaningfully to the prediction of ERA. This study aims to enhance the understanding of factors influencing pitcher performance and provide a robust analytical tool for evaluating and forecasting ERA. Additionally, the project seeks to address issues such as multicollinearity and model overfitting through advanced regression techniques.
+
+Introduction:
+Baseball analytics has increasingly leveraged statistical methodologies to evaluate player performance and inform strategic decisions. Among the key performance indicators, ERA serves as a critical measure of a pitcher's effectiveness, representing the average number of earned runs a pitcher allows per nine innings pitched. Accurate prediction of ERA is invaluable for team management, player development, and fantasy sports enthusiasts.
+
+This project aims to construct a regression model that predicts a pitcher's ERA using a comprehensive set of performance metrics. The dataset includes variables such as strike percentage (k_percent), walk percentage (bb_percent), whiff percentage (whiff_percent), weighted on-base average (woba), expected batting average (xba), and others. The goals of the study were to
+1. Identify the most significant predictors of ERA.
+2. Develop a model that balances accuracy and interpretability.
+3. Address multicollinearity and overfitting through appropriate modeling techniques.
+4. Validate the model using diagnostic tests to ensure its reliability.
+
+The questions we looked to answer were
+1. Which performance metrics are the most significant predictors of a pitcher's ERA?
+2. How do advanced regression techniques like Ridge, LASSO, and Elastic Net improve model performance?
+3. What are the potential issues of multicollinearity in the dataset, and how can they be mitigated?
+4. How well does the final model generalize to new data based on diagnostic assessments?
+
+Data Collection:
+The analysis utilizes two primary datasets:
+Pitching Data 2023 (pitching_data_2023.csv): This dataset contains comprehensive pitching statistics for the 2023 season, including metrics such as ERA, strike percentage, walk percentage, and more.
+Additional Stats (additional_stats.csv): This dataset provides supplementary statistics that offer deeper insights into pitcher performance.
+The datasets were merged using the unique identifier last_name..first_name to consolidate the relevant metrics for each pitcher. Preliminary data exploration included examining column names and initial data entries to ensure proper alignment and integrity.
+Basic summary statistics and visualizations were employed to understand the distribution of key variables and identify potential outliers or anomalies. This initial exploration informed the subsequent modeling approach by highlighting variables of interest and potential multicollinearity issues.
+
+
+Data Analysis and Results:
+Multiple linear regression models were constructed to evaluate different combinations of predictors based on specific hypothesis we wanted to test. 
+Model 1: p_era ~ k_percent + bb_percent
+Hypothesis: Basic stats like how often a pitcher gets strikeouts or gives up walks affect performance.
+Model 2: p_era ~ woba + whiff_percent
+Hypothesis: A pitcher’s ability to prevent strong batting and get swings and misses impacts their effectiveness.
+Model 3: p_era ~ player_age + xba * woba
+Hypothesis: A pitcher’s age and how hard batters are expected to hit against them influence performance.
+Model 4: p_era ~ swing_percent + hard_hit_percent + whiff_percent
+Hypothesis: How batters swing and the quality of contact made against a pitcher explain performance.
+Model 5: p_era ~ player_age * k_percent + bb_percent
+
+Hypothesis: A pitcher’s control (walk rate) and ability to strike batters out, along with their age, impact performance.
+Each model’s summary statistics and Akaike Information Criterion (AIC) values were used to assess fit and relative performance:
+Residual vs. fitted plots showed no clear patterns, indicating models effectively captured key relationships. Some outliers were observed but were not significant enough to address at this stage.
+AIC comparison revealed Model 2 (woba + whiff_percent) as the best-performing model with the lowest AIC of 91.89, suggesting it strikes the optimal balance between complexity and fit. Model 3 (player_age + xba ∗ woba) followed with an AIC of 94.43. Other models had significantly higher AIC values, making them less suitable.
+
+Insights from Coefficients Plots
+Positive coefficients, like woba, indicated an increase in ERA, while negative coefficients, such as xba, reduced ERA.
+In Model 3, player age showed minimal impact, whereas in Model 2, woba was highly influential compared to the smaller impact of whiff_percent.
+Model 4 showed lower impacts for swing_percent and hard_hit_percent relative to whiff_percent.
+
+Refining the Models
+The initial model began with predictors including:
+k_percent, bb_percent, whiff_percent, woba, and an interaction between xba and woba.
+Variables like player age, swing_percent, and hard_hit_percent were removed due to weak or redundant effects. This streamlined approach emphasized predictors with significant impacts, such as woba and whiff_percent, aligning with domain knowledge of pitching performance.
+
+The comprehensive model we developed was:
+lm(p_era ~ k_percent + bb_percent + whiff_percent + woba + xba:woba, data = merged_data)
+
+This model incorporated multiple predictors and an interaction term between xba and woba. The summary indicated significant predictors, but Variance Inflation Factor (VIF) analysis revealed multicollinearity issues, particularly among woba, xba, and the interaction term woba:xba.
+
+To mitigate multicollinearity, regularization techniques were employed:
+We applied a RIDGE Regression to stabilize coefficient estimates in the presence of multicollinearity. Cross-validation identified the optimal lambda value, enhancing model performance.
+Additionally, we applied a LASSO Regression that facilitated variable selection by shrinking less important coefficients to zero. This identified whiff_percent and the interaction woba:xba as significant contributors.
+After observing both models to be suitable, we created an Elastic Net Regression, which combined the penalties of Ridge and LASSO to balance variable selection and coefficient stabilization. The final Elastic Net model demonstrated superior performance with reduced overfitting.
+
+Comprehensive diagnostic assessments were conducted to validate the final model.
+1. We looked at the residual analysis, where the residual plots indicated no significant patterns, suggesting a good fit.
+2. We looked at the QQ-Plot, which confirmed the normality of residuals.
+3. We looked at leverage and influence, which identified four influential outliers based on Cook's Distance and leverage values.
+4. We looked at autocorrelation through the use of Durbin-Watson and Ljung-Box tests, which confirmed the absence of significant autocorrelation in residuals.
+5. We looked at Variance Inflation Factor, where we saw that post-regularization VIF values were within acceptable ranges, indicating reduced multicollinearity.
+
+The final Elastic Net regression model achieved a high R-squared value, indicating strong explanatory power. Residual plots and diagnostic tests affirmed the model's reliability, though the presence of influential outliers warranted further investigation.
+
+The analysis identified four influential pitchers with characteristics such as high strike and walk percentages or extreme innings pitched. These outliers included Michael Kopech, Shohei Ohtani, Blake Snell, and Spencer Strider, who exhibited unique performance profiles that significantly impacted the model, highlighting the need for careful consideration in model interpretation and potential inclusion of additional variables.
+
+Summary and Discussion:
+This project successfully developed a robust regression model for predicting pitcher ERA using advanced statistical techniques. By employing Ridge, LASSO, and Elastic Net regressions, the analysis effectively addressed multicollinearity and enhanced model accuracy. The final Elastic Net model demonstrated strong predictive capabilities, validated through comprehensive diagnostic tests.
+The key findings we discovered were that the regressors whiff_percent and the interaction between woba and xba emerged as the most crucial predictors of ERA. Additionally, we found that regularization techniques improved model stability and interpretability, reducing the risk of overfitting. Finally, we discovered that outliers were created by influential pitchers, which underscores the importance of accounting for exceptional performances in predictive modeling.
+
+Future Work:
+Future studies could expand the dataset to include multiple seasons for temporal analysis, incorporate additional performance metrics such as pitch velocity and movement, and explore parameter tuning to further refine the lambda parameter through more granular grid search to enhance model precision. Additionally, addressing the identified outliers through specialized modeling approaches could further refine the model's accuracy or indicate necessary divides that likely exist between different molds of pitchers.
+
+Appendix:
+```{r}
+# This part of the code helps to determine which regressors out of the hundred in 
+# the dataset showed some level of promise in creating a regression model that could
+# accurately predict pitcher ERA
+
+library(tidyverse)
+library(stats)
+
+file_path <- "/Users/aaronwu/Desktop/stat410 copy/final/pitching_data_2023.csv"
+file_path1 <- "/Users/aaronwu/Desktop/stat410 copy/final/additional_stats.csv"
+data <- read.csv(file_path)
+data1 <- read.csv(file_path1)
+merged_data <- merge(data, data1, by = "last_name..first_name")
+
+colnames(merged_data)
+head(merged_data)
+
+models <- list(
+  lm_1 = lm(p_era ~ k_percent + bb_percent, data = merged_data),
+  lm_2 = lm(p_era ~ woba + whiff_percent, data = merged_data),
+  lm_3 = lm(p_era ~ player_age + xba * woba, data = merged_data),
+  lm_4 = lm(p_era ~ swing_percent + hard_hit_percent + whiff_percent, data = merged_data),
+  lm_5 = lm(p_era ~ player_age * k_percent + bb_percent, data = merged_data)
+)
+
+model_summaries <- lapply(models, summary)
+model_aics <- sapply(models, AIC)
+
+print(model_summaries)
+print(model_aics)
+
+par(mfrow = c(2, 2))
+plot(models$lm_1)
+
+coef_plots <- lapply(models, function(model) {
+  coef_df <- broom::tidy(model)
+  ggplot(coef_df, aes(x = term, y = estimate, fill = estimate > 0)) +
+    geom_col() +
+    coord_flip() +
+    labs(title = paste("Coefficients of", deparse(model$call[[2]])),
+         x = "Terms",
+         y = "Estimates")
+})
+
+print(coef_plots)
+
+resid_fitted_plots <- lapply(models, function(model) {
+  ggplot(model, aes(.fitted, .resid)) +
+    geom_point() +
+    geom_smooth(method = "lm", col = "red") +
+    labs(title = paste("Residuals vs. Fitted for", deparse(model$call[[2]])),
+         x = "Fitted values",
+         y = "Residuals")
+})
+
+print(resid_fitted_plots)
+```
+
+```{r}
+# This is the first model. We are trying to generate a linear regression model.
+library(ggplot2)
+library(broom)
+library(dplyr)
+
+model <- lm(p_era ~ k_percent + bb_percent + whiff_percent + woba + xba:woba, data = merged_data)
+
+model_summary <- summary(model)
+print(model_summary)
+
+tidy_model <- tidy(model)
+
+print(tidy_model)
+
+ggplot(tidy_model, aes(x = term, y = estimate, fill = estimate > 0)) +
+  geom_col() +
+  coord_flip() +  
+  labs(title = "Coefficients of the Linear Regression Model", x = "Terms", y = "Estimates") +
+  scale_fill_manual(values = c("red", "blue"), labels = c("Negative", "Positive"))
+```
+
+```{r}
+# Look at the VIF to determine if methods like Ridge would be useful
+library(car)
+
+model <- lm(p_era ~ k_percent + bb_percent + whiff_percent + woba + xba * woba, data = merged_data)
+
+vif_values <- vif(model)  
+
+print(vif_values)
+
+# In this case, high VIF for woba, xba, and woba:xba, so we try 
+```
+
+```{r}
+# This is a ridge prediction. Is there any other way we can optimize this?
+library(glmnet)
+
+predictors <- model.matrix(p_era ~ k_percent + bb_percent + whiff_percent + woba + xba * woba, data = merged_data)[,-1]
+response <- merged_data$p_era
+
+lambda_values <- 10^seq(10, -2, length = 100)
+
+ridge_model <- glmnet(predictors, response, alpha = 0, lambda = lambda_values, standardize = TRUE)
+
+cv_ridge <- cv.glmnet(predictors, response, alpha = 0, type.measure = "mse", nfolds = 10)
+plot(cv_ridge)
+
+best_lambda <- cv_ridge$lambda.min
+best_ridge_model <- glmnet(predictors, response, alpha = 0, lambda = best_lambda, standardize = TRUE)
+
+coef(best_ridge_model)
+# From the results, it seems fine, but we need to check for residuals/other techniques to validate model
+```
+```{r}
+predicted_values <- predict(best_ridge_model, s = "lambda.min", newx = predictors)
+residuals <- response - predicted_values
+
+plot(residuals, type = 'p', main = "Residual Plot", xlab = "Predicted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+#Residual plot looks good, let's look at other plots
+```
+
+```{r}
+# Trying other techniques like looking at QQ-plot, leverage points, autocorrelation checks, Durbin-Watson and Ljung-Box tests
+library(car)
+library(lmtest)
+library(stats)
+
+qqnorm(residuals)
+qqline(residuals, col = "red")
+
+influencePlot(model, id.method="identify", main="Influence Plot", sub="Circle size is proportional to Cook's Distance")
+
+acf(residuals(model), main="ACF of Residuals")
+
+dw_result <- dwtest(model)
+print(dw_result)
+
+lb_test <- Box.test(residuals(model), type = "Ljung-Box")
+print(lb_test)
+# Overall, all of the techniques showed that the model we created was good. Out of curiosity, I want to examine what other models look like.
+# First, looking at making some of the coefficients polynomial, and second looking at a LASSO regression
+```
+
+```{r}
+# Make some coefficients polynomial
+library(stats)
+
+poly_model <- lm(p_era ~ poly(k_percent, 2) + poly(bb_percent, 2) + poly(whiff_percent, 2) + poly(woba, 2) + poly(xba, 2) + poly(woba, 1)*poly(xba, 1), data = merged_data)
+
+summary(poly_model)
+
+plot(poly_model)
+
+# Polynomial slightly fits the data better, but at the cost of overfitting/homoscedacity. Overall tradeoff is that it can capture more complex relationships, but is less robust for predicting on newer data
+```
+
+```{r}
+# LASSO regression
+library(glmnet)
+
+predictors <- model.matrix(p_era ~ k_percent + bb_percent + whiff_percent + woba + xba * woba, data = merged_data)[,-1]
+response <- merged_data$p_era
+
+set.seed(123)  
+lasso_model <- glmnet(predictors, response, alpha = 1, lambda = 10^seq(4, -2, length = 100))
+
+cv_lasso <- cv.glmnet(predictors, response, alpha = 1)
+plot(cv_lasso)
+best_lambda <- cv_lasso$lambda.min
+
+best_lasso_model <- glmnet(predictors, response, alpha = 1, lambda = best_lambda)
+
+#print(coef(best_lasso_model))
+# LASSO shows that there is actually two variables, whiff_percent and woba: xba, 
+# that are causing potentially a more complex model than necessary.
+# Because of that, let's try combining the LASSO and Ridge into an 
+# Elastic Net Regression
+```
+
+```{r}
+# Elastic Net Regression
+library(glmnet)
+
+predictors <- model.matrix(p_era ~ k_percent + bb_percent + whiff_percent + woba + xba * woba, data = merged_data)[,-1]
+
+response <- merged_data$p_era
+
+set.seed(123)
+
+cv_model <- cv.glmnet(predictors, response, alpha = 0.5, family = "gaussian", standardize = TRUE, type.measure = "mse", nfolds = 10)
+
+plot(cv_model)
+
+best_lambda <- cv_model$lambda.min
+
+final_model <- glmnet(predictors, response, alpha = 0.5, lambda = best_lambda, standardize = TRUE)
+
+print(coef(final_model))
+# This model looks super good. However, we need to validate it one more time.
+```
+
+```{r}
+library(glmnet)
+library(car)
+library(caret)
+library(Metrics)
+
+predictions <- predict(final_model, s = best_lambda, newx = predictors)
+
+r_squared <- cor(predictions, response)^2
+
+residuals <- response - predictions
+
+plot(predictions, residuals, main = "Residuals vs Fitted", xlab = "Fitted Values", ylab = "Residuals")
+abline(h = 0, col = "red")
+
+qqnorm(residuals)
+qqline(residuals, col = "red")
+
+standard_model <- lm(p_era ~ ., data = as.data.frame(cbind(p_era = response, predictors)))
+vif_values <- vif(standard_model)
+print(vif_values)
+
+plot(predictions, sqrt(abs(residuals)), main = "Scale-Location Plot", xlab = "Fitted Values", ylab = "Sqrt(|Residuals|)")
+abline(h = 0, col = "red")
+
+leverage_values <- hatvalues(standard_model)
+plot(leverage_values, main = "Leverage Plot")
+abline(h = 2 * mean(leverage_values), col = "red", lty = 2)
+
+cooksd <- cooks.distance(standard_model)
+plot(cooksd, main = "Cook's Distance", type = "h")
+threshold <- 4 / (length(response) - length(coef(standard_model)))
+abline(h = threshold, col = "red", lty = 2)
+
+cat("R-squared:", r_squared, "\n")
+# Overall, this model is probably the best we will achieve. Only thing is 
+# potentially looking at Cook's Distance because there are 4 outliers.
+```
+
+```{r}
+# I just want to check outliers
+library(glmnet)
+library(dplyr)
+
+predictors <- model.matrix(p_era ~ k_percent + bb_percent + whiff_percent + woba + xba * woba, data = merged_data)[,-1]
+response <- merged_data$p_era
+
+set.seed(123)
+cv_model <- cv.glmnet(predictors, response, alpha = 0.5, family = "gaussian")
+best_lambda <- cv_model$lambda.min
+final_model <- glmnet(predictors, response, alpha = 0.5, lambda = best_lambda)
+
+cooks_values <- cooks.distance(lm(p_era ~ ., data = as.data.frame(cbind(p_era = response, predictors))))
+
+leverage_values <- hatvalues(lm(p_era ~ ., data = as.data.frame(cbind(p_era = response, predictors))))
+
+cooks_threshold <- 4 / (nrow(predictors) - ncol(predictors) - 1)
+
+high_cooks <- which(cooks_values > cooks_threshold)
+
+leverage_threshold <- 2 * ncol(predictors) / nrow(predictors)
+high_leverage <- which(leverage_values > leverage_threshold)
+
+influential_points <- sort(unique(c(high_cooks, high_leverage)))
+
+influential_data <- merged_data[influential_points, ]
+print(influential_data)
+
+plot(response, pch = 20, col = ifelse(seq_along(response) %in% influential_points, "red", "black"))
+legend("topright", legend = c("Influential", "Not influential"), col = c("red", "black"), pch = 20)
+# Most of these players have a few things in common: 
+# 1. High k_percent and bb_percent like Trevor Williams, Michael Kopech, Luke Weaver
+# 2. Extreme innings pitched like Shohei Ohtani, Blake Snell
+# 3. Combination of these 2: Spencer Strider
+```
+
+References:
+https://www.kaggle.com/datasets/vivovinco/2023-mlb-player-stats
+https://www.blessyouboys.com/2019/1/9/18172095/baseball-stats-for-beginners-earned-run-average-field-independent-pitching-explained
+https://www.mlb.com/glossary/standard-stats/walks-and-hits-per-inning-pitched
+https://baseballsavant.mlb.com/savant-player/shohei-ohtani-660271?stats=statcast-r-pitching-mlb&playerType=pitcher
+
+Self-Reflection:
+Aaron Wu:
+Throughout this project, I dedicated approximately 15 hours to data collection, analysis, and report preparation. This endeavor significantly enhanced my understanding of regression modeling, particularly in handling multicollinearity and implementing regularization techniques. One major challenge was managing the extensive number of predictors, which necessitated a methodical approach to variable selection and model optimization.
+I learned the importance of thorough data exploration and the role of diagnostic tests in validating model assumptions. Encountering influential outliers underscored the need for vigilance in model interpretation and the consideration of exceptional cases.
+If I were to undertake this project again, I would allocate more time to exploring interactive visualization tools to gain deeper insights into data patterns. Additionally, incorporating domain expertise earlier in the process could guide more informed variable selection and modeling decisions.
+My advice to future students is to embrace a structured approach to data analysis, remain open to iterative model refinement, and prioritize understanding the underlying assumptions of each statistical method employed. Effective time management and continuous learning are key to navigating complex analytical projects successfully.

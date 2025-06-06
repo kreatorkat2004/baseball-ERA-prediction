@@ -1,4 +1,3 @@
-# baseball-ERA-prediction
 # Predicting Baseball Pitcher's Earned Run Average (ERA)
 
 A comprehensive statistical analysis project that develops predictive regression models to forecast a baseball pitcher's Earned Run Average (ERA) using various performance metrics and advanced regularization techniques.
